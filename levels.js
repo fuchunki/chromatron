@@ -4,14 +4,14 @@ var levelCodes=new Array(14+1);
 
 // 1st row: ray genrators 
 // in the form of [[input of 1st], [input of 2nd].....]
-//[x,y,orientation,colour]
+// [x,y,orientation,colour]
 
 // 2nd: targets 
 // in the form of [[input of 1st], [input of 2nd].....]
 //[x,y,colour]
 
-// 3rd: tools | 1.mirror 2.splitter 3.Bender
-// in the form of [#mirror, #splitter, .....]
+// 3rd: tools | 1.mirror 2.splitter 3.Bender 4.Filter"s" of different colours
+// in the form of [#mirror, #splitter, #Bender, [x,#blue,#green,#cyan,#red,#magenta,#magenta], ....]
 
 // 4th: description: ["1st line", "2nd line",.....] or ".....whole string...."
 
@@ -136,5 +136,14 @@ levelCodes[14] = [
   			[[6,6,2],[8,6,1],[6,8,7],[8,8,4]],
   			[5,0,2],
 			"The white laser combines red, blue, and green light in a single beam. The white pinwheel requires at least one each of red, blue, and green. (The white laser does nicely.)"
+		];
+
+levelCodes[15] = [
+  			[[0,7,2,7]],
+  			[[2,4,4],[3,10,2],[7,7,7],[9,9,5],[10,4,3],[11,7,1],[12,2,6]],
+  			[0,2,5,[null,1,1,0,1]],
+			"The FILTER only allows one color of light through - try them on a white laser",
+			[],
+			[[4,7,2],[6,7,2],[8,7,2],[10,7,2]]
 		];
 		

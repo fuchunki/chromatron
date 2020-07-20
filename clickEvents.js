@@ -28,25 +28,27 @@ gameCanvas.addEventListener('mousedown', e => {
 
 gameCanvas.addEventListener('mousemove', e => {
 	if (isMousedown){
-    if(!isDragging){
-      if (Math.pow(startX-e.offsetX,2)+Math.pow(startY-e.offsetY,2)>THRESHOLD)
-        isDragging = true;
-    }
+		if(!isDragging){
+			if (Math.pow(startX-e.offsetX,2)+Math.pow(startY-e.offsetY,2)>THRESHOLD)
+				isDragging = true;
+		}
 		else{
-      refreshBoard();
+			refreshBoard();
 
-      //redraw the cell to cover
-      ctx.beginPath();
-      ctx.fillStyle = 'DimGray';
-      ctx.strokeStyle = 'darkgrey';
-      ctx.rect(focusItem.x*CELLSIZE, focusItem.y*CELLSIZE, CELLSIZE, CELLSIZE);
-      ctx.fill();
-      ctx.stroke();
-
-      drawRaysForCell(focusItem.x,focusItem.y);
-
-      focusItem.draw(e.offsetX,e.offsetY);
-    }
+			//redraw the cell to cover the original item
+			ctx.beginPath();
+			ctx.fillStyle = BOARDCOLOUR;
+			ctx.strokeStyle = BORDERCOLOUR;
+			ctx.lineWidth = borderWidth;
+			ctx.rect(focusItem.x*CELLSIZE, focusItem.y*CELLSIZE, CELLSIZE, CELLSIZE);
+			ctx.fill();
+			ctx.stroke();
+		
+			drawRaysForCell(focusItem.x,focusItem.y);
+			
+			ctx.translate(e.offsetX, e.offsetY);
+			focusItem.draw();
+		}
 	}
 });
 

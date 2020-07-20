@@ -1,5 +1,4 @@
 
-<body>
 
 <div>
 	
@@ -14,7 +13,9 @@
 const CELLSNUMBER=15;
 const CELLSIZE=40;
 const TOOLBOX={"row":4,"col":6};
-const SPACING=2;
+const SPACING=2; //spacing between game board and toolbox
+const BOARDCOLOUR = 'DimGray';
+const BORDERCOLOUR = 'darkgrey';
 
 //get canvas element and set ctx
 var gameCanvas = document.getElementById("myCanvas");
@@ -36,7 +37,7 @@ var text1stCell= {"i":CELLSNUMBER+1,"j":TOOLBOX.row+1};
 gameCanvas.width = totalCellColNum * CELLSIZE;
 gameCanvas.height = totalCellRowNum * CELLSIZE;
 
-var rayWidth = CELLSIZE/20;
+var borderWidth = CELLSIZE/40;
 
 
 //create cells 2d array for rays and tools (include toolbox)
@@ -119,12 +120,20 @@ function generateItems(){
 	tools=[];
 	var tl=code[2]; //3rd: tools 
 	var toolboxIndex=0;
-	var toolsList = [Mirror,Splitter,Bender];
+	var toolsList = [Mirror,Splitter,Bender,Filter];
 	for (var j=0;j<tl.length;j++){
-		for(var i=0;i<tl[j];i++){
-			tools.push(new toolsList[j](toolboxIndex));
-			toolboxIndex++;
-		}
+		if(tl[j].length==undefined)
+			for(var i=0;i<tl[j];i++){
+				tools.push(new toolsList[j](toolboxIndex));
+				toolboxIndex++;
+			}
+		else 
+			for(var k=1;k<tl[j].length;k++){
+				for(var i=0;i<tl[j][k];i++){
+					tools.push(new toolsList[j](toolboxIndex,k));
+					toolboxIndex++;
+				}
+			}	
 	}
 	
 	description=[];
@@ -249,4 +258,3 @@ gotoLevel(currentLevel);
 
 </script>
 <script src="clickEvents.js"></script>
-</body>

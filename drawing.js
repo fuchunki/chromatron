@@ -30,11 +30,12 @@ function drawLvlsButton(){
 }
   
 function drawGrid(){
-	ctx.fillStyle = 'DimGray';
+	ctx.fillStyle = BOARDCOLOUR;
 	ctx.fillRect(0, 0, boardLength, boardLength);
 	ctx.fillRect(toolboxPos, 0, toolboxW, toolboxH);
   
-	ctx.strokeStyle = 'darkgrey';
+	ctx.strokeStyle = BORDERCOLOUR;
+	ctx.lineWidth = borderWidth;
 	ctx.beginPath();
 	for (var i = 0; i < boardLength; i+=CELLSIZE) {
 		ctx.moveTo(i,0);
@@ -61,7 +62,7 @@ function drawRaysForCell(i,j){
 	
 	if(cellsContent[i][j][0]=="invalid")return;
 	
-	ctx.lineWidth = rayWidth;
+	ctx.lineWidth = borderWidth*2;
 	centreX=(i+0.5)*CELLSIZE;
 	centreY=(j+0.5)*CELLSIZE;         
 	for (var k = 0; k < 8; k++){		

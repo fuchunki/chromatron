@@ -1,1 +1,252 @@
-<h1>Hello</h1>
+
+<body>
+
+<div>
+	
+	<canvas id="myCanvas" width="100" height="100" style="border:5px solid #d3d3d3;">
+	Your browser does not support the HTML canvas tag.</canvas>
+	
+</div>
+
+<script src="levels.js"></script>
+<script>
+//cell info initialization 
+const CELLSNUMBER=15;
+const CELLSIZE=40;
+const TOOLBOX={"row":4,"col":6};
+const SPACING=2;
+
+//get canvas element and set ctx
+var gameCanvas = document.getElementById("myCanvas");
+var ctx = gameCanvas.getContext("2d");
+
+//calculate game sizing info
+var boardLength = CELLSNUMBER * CELLSIZE;
+var totalCellColNum=CELLSNUMBER+SPACING+TOOLBOX.col;
+
+var lvlsRowNum= ~~(levelCodes.length / totalCellColNum)+1;
+var totalCellRowNum=CELLSNUMBER+lvlsRowNum;
+
+var toolboxW = TOOLBOX.col * CELLSIZE;
+var toolboxH = TOOLBOX.row * CELLSIZE;
+var toolboxPos = (CELLSNUMBER+SPACING)*CELLSIZE;
+
+var text1stCell= {"i":CELLSNUMBER+1,"j":TOOLBOX.row+1};
+
+gameCanvas.width = totalCellColNum * CELLSIZE;
+gameCanvas.height = totalCellRowNum * CELLSIZE;
+
+var rayWidth = CELLSIZE/20;
+
+
+//create cells 2d array for rays and tools (include toolbox)
+  
+var cellsContent = new Array(totalCellColNum); 
+for (var i = 0; i < cellsContent.length; i++) { 
+    cellsContent[i] = new Array(totalCellRowNum); 
+    for (var j = 0; j < totalCellRowNum; j++) { 
+    	cellsContent[i][j]=["invalid",// places for rays
+  			                "invalid" //places for item, set all cells invalid first
+                         ];
+    }
+}
+
+//functions for global use
+
+function getRayColourName(colourCode){
+	switch(colourCode) {
+		case 7:return 'white';//bitwise RGB=111
+		case 6:return 'yellow';//bitwise RGB=110
+		case 5:return 'magenta';//bitwise RGB=101
+		case 4:return 'red';//bitwise RGB=100
+		case 3:return 'cyan';//bitwise RGB=011
+		case 2:return 'lime';//bitwise RGB=010
+		case 1:return 'blue';//bitwise RGB=001
+	}
+}
+
+function orientationToDxdy(orientation){
+  //if (orientation<0) return orientationToDxdy(orientation+8);
+	switch(orientation) {
+		case 0:return {x:0, y:-1};	//orientation indicated as below, middle is (0,0)
+		case 1:return {x:1, y:-1};	// -1 0 1
+		case 2:return {x:1, y:0};		// [7 0 1] -1
+		case 3:return {x:1, y:1};		// [6 . 2]  0
+		case 4:return {x:0, y:1};		// [5 4 3]  1
+		case 5:return {x:-1, y:1};
+		case 6:return {x:-1, y:0};
+		case 7:return {x:-1, y:-1};
+	}
+  return orientationToDxdy(orientation-8);
+}
+</script>
+
+<script src="items.js"></script>
+<script src="drawing.js"></script>
+
+<script>
+//initialize the level data
+    
+var uptoLevel= 1;
+var currentLevel = 1;
+
+//load record
+if (typeof(Storage) !== "undefined" && localStorage.getItem("uptoLevel")!=null) {
+	currentLevel=parseInt(localStorage.getItem("currentLevel"),10);
+	uptoLevel=parseInt(localStorage.getItem("uptoLevel"),10);
+}
+
+//set the items
+var generators;
+var targets;
+var tools;
+var blocks;
+var description;
+
+function generateItems(){
+
+	generators=[];
+	var gnt=code[0]; //1st row: genrators   
+	for(var i=0;i<gnt.length;i++)
+	  generators.push(new BeamGenerator(gnt[i][0],gnt[i][1],gnt[i][2],gnt[i][3]));
+	
+
+	targets=[];
+	var tg=code[1]; //2nd: targets	
+	for(var i=0;i<tg.length;i++)
+		targets.push(new Target(tg[i][0],tg[i][1],tg[i][2]));
+
+	tools=[];
+	var tl=code[2]; //3rd: tools 
+	var toolboxIndex=0;
+	var toolsList = [Mirror,Splitter,Bender];
+	for (var j=0;j<tl.length;j++){
+		for(var i=0;i<tl[j];i++){
+			tools.push(new toolsList[j](toolboxIndex));
+			toolboxIndex++;
+		}
+	}
+	
+	description=[];
+	if(code.length>3)description=code[3];
+	
+	blocks=[];
+	if(code.length>4){ 
+		var blks=code[4];//4th: blocks
+		if(blks.length>=CELLSNUMBER*CELLSNUMBER){
+			for(var i=0;i<blks.length;i++)
+				if(blks[i]<8)
+					blocks.push(new Block(~~(blks[i]/CELLSNUMBER),blks[i]%8));
+		}
+		else 
+			for(var i=0;i<blks.length;i++){
+				if(blks[i].length==2)
+					blocks.push(new Block(blks[i][0],blks[i][1]));
+				else if(blks[i].length==4)
+					for(var j=0;j<=blks[i][2]-blks[i][0];j++)
+						for(var k=0;k<=blks[i][3]-blks[i][1];k++)
+							blocks.push(new Block(blks[i][0]+j,blks[i][1]+k));
+		}
+	}
+	
+	conduits=[];
+	if(code.length>5){ 
+		var cdt=code[5];//5th: conduits
+		if(cdt.length>=CELLSNUMBER*CELLSNUMBER){
+			for(var i=0;i<cdt.length;i++)
+				if(cdt[i]<8)
+					conduits.push(new Conduit(~~(cdt[i]/CELLSNUMBER),cdt[i]%8),cdt[i]);
+		}
+		else 
+			for(var i=0;i<cdt.length;i++){
+				if(cdt[i].length==3)
+					conduits.push(new Conduit(cdt[i][0],cdt[i][1],cdt[i][2]));
+				else if(cdt[i].length==5)
+					for(var j=0;j<=cdt[i][2]-cdt[i][0];j++)
+						for(var k=0;k<=cdt[i][3]-cdt[i][1];k++)
+							conduits.push(new Conduit(cdt[i][0]+j,cdt[i][1]+k,cdt[i][4]));
+		}
+	}
+	
+}
+
+function clearBoard(){
+	
+	for (var i = 0; i < CELLSNUMBER; i++) { 
+		for (var j = 0; j < CELLSNUMBER; j++) { 
+			for (var k = 0; k < 8; k++) {
+					cellsContent[i][j]=[[0,0,0,0,0,0,0,0],//8 directions rays
+  			                   null //to hold items
+                         ];
+      }				
+		}
+	}
+	
+	for (var i = 0; i < TOOLBOX.col; i++) {
+		for (var j = 0; j < TOOLBOX.row; j++) {
+					cellsContent[CELLSNUMBER+SPACING+i][j][1]=null;				
+		}
+	}
+}
+
+
+function refreshRays(){
+	for (var i = 0; i < CELLSNUMBER; i++) { 
+		for (var j = 0; j < CELLSNUMBER; j++) { 
+			for (var k = 0; k < 8; k++) { 
+					cellsContent[i][j][0][k]=0;				
+			}
+		}
+	}
+	for (const i of generators)i.act();
+	for (const i of targets)i.act();
+}
+
+function refreshBoard(){
+	ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+	drawLvlsButton();
+	drawGrid();
+	
+	for (const i of targets)i.localDraw();
+	for (const i of conduits)i.localDraw();
+	
+	for (var i = 0; i < CELLSNUMBER; i++) { 
+		for (var j = 0; j < CELLSNUMBER; j++) { 
+			drawRaysForCell(i,j);
+		}
+	}
+	
+	for (const i of generators)i.localDraw();
+	for (const i of tools)i.localDraw();
+	for (const i of blocks)i.localDraw();
+	
+	drawText();
+
+}
+
+function gotoLevel(i){
+	code = levelCodes[i];
+	currentLevel = i;	
+
+	clearBoard();
+	generateItems();
+	
+	//load previous game status of each level
+	let load = JSON.parse(localStorage.getItem("save"+currentLevel));
+	if(load!=null)
+		if(load.length===tools.length)
+			for(let i=0;i<load.length;i++){
+				tools[i].setNewLocation(load[i].x,load[i].y);
+				tools[i].orientation=load[i].orientation;
+			}
+	
+	refreshRays();
+	refreshBoard();
+}
+
+//load level
+gotoLevel(currentLevel);
+
+</script>
+<script src="clickEvents.js"></script>
+</body>

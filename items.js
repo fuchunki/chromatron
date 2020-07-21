@@ -97,7 +97,7 @@ BeamGenerator.prototype.draw = function() {
 	ctx.beginPath();
 	ctx.arc(0, CELLSIZE*0.3, CELLSIZE/6, 0, 2 * Math.PI, false);
     ctx.fill();	
-	ctx.fillRect(-CELLSIZE/10, -CELLSIZE/4, CELLSIZE/5, 25);	
+	ctx.fillRect(-CELLSIZE/10, -CELLSIZE/4, CELLSIZE/5, CELLSIZE*0.625);	
 
 	ctx.beginPath();
 	ctx.fillStyle = getRayColourName(this.colour);

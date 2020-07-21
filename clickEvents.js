@@ -6,11 +6,11 @@ var startX; //record the starting pos of movement event
 var startY;
 var focusItem;
 
-gameCanvas.addEventListener('mousedown', e => {
-	let x = ~~(e.offsetX/CELLSIZE);//using bitwise operator to perform intergral division
-	let y = ~~(e.offsetY/CELLSIZE);
-	startX=e.offsetX;
-	startY=e.offsetY;
+function down(offsetX,offsetY){
+	let x = ~~(offsetX/CELLSIZE);//using bitwise operator to perform intergral division
+	let y = ~~(offsetY/CELLSIZE);
+	startX=x;
+	startY=y;
 	
 	if(y>=CELLSNUMBER){
 		let lvl=x+(y-CELLSNUMBER)*totalCellColNum+1;
@@ -22,14 +22,13 @@ gameCanvas.addEventListener('mousedown', e => {
 		if(cellsContent[x][y][1].clickable){
 			isMousedown = true;
 			focusItem=cellsContent[x][y][1];
-		} 
-	
-});
+		}
+}
 
-gameCanvas.addEventListener('mousemove', e => {
+function move(offsetX,offsetY){
 	if (isMousedown){
 		if(!isDragging){
-			if (Math.pow(startX-e.offsetX,2)+Math.pow(startY-e.offsetY,2)>THRESHOLD)
+			if (Math.pow(startX-offsetX,2)+Math.pow(startY-offsetY,2)>THRESHOLD)
 				isDragging = true;
 		}
 		else{
@@ -46,15 +45,15 @@ gameCanvas.addEventListener('mousemove', e => {
 		
 			drawRaysForCell(focusItem.x,focusItem.y);
 			
-			ctx.translate(e.offsetX, e.offsetY);
+			ctx.translate(offsetX, offsetY);
 			focusItem.draw();
 		}
 	}
-});
+}
 
-window.addEventListener('mouseup', e => {
-	let x = ~~(e.offsetX/CELLSIZE);//using bitwise operator to perform intergral division
-	let y = ~~(e.offsetY/CELLSIZE);
+function up(offsetX,offsetY){
+	let x = ~~(offsetX/CELLSIZE);//using bitwise operator to perform intergral division
+	let y = ~~(offsetY/CELLSIZE);
 	if(isDragging){		
 		if(cellsContent[x][y][1]==null)focusItem.setNewLocation(x,y);
 	}
@@ -92,9 +91,32 @@ window.addEventListener('mouseup', e => {
 		localStorage.setItem("uptoLevel", uptoLevel);
 		localStorage.setItem("save"+currentLevel,JSON.stringify(tools));
 	}
+}
 
+gameCanvas.addEventListener('mousedown', e => down(e.offsetX,e.offsetY));
+gameCanvas.addEventListener('mousemove', e => move(e.offsetX,e.offsetY));
+window.addEventListener('mouseup', e => up(e.offsetX,e.offsetY));
+
+
+var rect=gameCanvas.getBoundingClientRect();
+gameCanvas.addEventListener("touchstart", e => {
+	e.preventDefault();
+	down(e.changedTouches[0].clientX - rect.left,e.changedTouches[0].clientY - rect.top);
+});
+gameCanvas.addEventListener("touchmove", e => {
+	e.preventDefault();
+	move(e.changedTouches[0].clientX - rect.left,e.changedTouches[0].clientY - rect.top);
+});	
+gameCanvas.addEventListener("touchend", e => {
+	e.preventDefault();
+	up(e.changedTouches[0].clientX - rect.left,e.changedTouches[0].clientY - rect.top)
 });
 
-document.addEventListener( "keydown", e=>{
-	if(currentLevel+1<=uptoLevel)gotoLevel(currentLevel+1);
+
+document.addEventListener( "keydown", e => {
+	if(e.which==32)
+		if(currentLevel+1<=uptoLevel)
+			gotoLevel(currentLevel+1);
 });
+
+

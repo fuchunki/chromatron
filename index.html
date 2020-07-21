@@ -1,43 +1,54 @@
 
 
-<div>
-	
-	<canvas id="myCanvas" width="100" height="100" style="border:5px solid #d3d3d3;">
-	Your browser does not support the HTML canvas tag.</canvas>
-	
-</div>
+<canvas id="myCanvas">Your browser does not support the HTML canvas tag.</canvas>
 
 <script src="levels.js"></script>
 <script>
+
 //cell info initialization 
-const CELLSNUMBER=15;
-const CELLSIZE=40;
+const CELLSNUMBER=15; //number of cells of 1 side of the square game board
+var CELLSIZE=40;
 const TOOLBOX={"row":4,"col":6};
 const SPACING=2; //spacing between game board and toolbox
 const BOARDCOLOUR = 'DimGray';
 const BORDERCOLOUR = 'darkgrey';
 
+
+//calculate the total number of cells for whole canvas
+var lvlsRowNum= ~~(levelCodes.length / totalCellColNum)+1;
+var totalCellColNum=CELLSNUMBER+SPACING+TOOLBOX.col;
+var totalCellRowNum=CELLSNUMBER+lvlsRowNum;
+
+var text1stCell= {"i":CELLSNUMBER+1,"j":TOOLBOX.row+1}; //the first cell to display the text message
+
 //get canvas element and set ctx
 var gameCanvas = document.getElementById("myCanvas");
 var ctx = gameCanvas.getContext("2d");
 
-//calculate game sizing info
-var boardLength = CELLSNUMBER * CELLSIZE;
-var totalCellColNum=CELLSNUMBER+SPACING+TOOLBOX.col;
+//calculate the cellsize to fully utilized the window
+var boardLength;
+var toolboxW;
+var toolboxH;
+var toolboxPos;
+var text1stCell;
+var borderWidth;
 
-var lvlsRowNum= ~~(levelCodes.length / totalCellColNum)+1;
-var totalCellRowNum=CELLSNUMBER+lvlsRowNum;
+function setSize(e){
+	CELLSIZE = ~~Math.min(window.innerWidth/(totalCellColNum+1),window.innerHeight/(totalCellRowNum+1));
 
-var toolboxW = TOOLBOX.col * CELLSIZE;
-var toolboxH = TOOLBOX.row * CELLSIZE;
-var toolboxPos = (CELLSNUMBER+SPACING)*CELLSIZE;
+	//calculate game sizing info
+	boardLength = CELLSNUMBER * CELLSIZE;
+	toolboxW = TOOLBOX.col * CELLSIZE;
+	toolboxH = TOOLBOX.row * CELLSIZE;
+	toolboxPos = (CELLSNUMBER+SPACING)*CELLSIZE;
 
-var text1stCell= {"i":CELLSNUMBER+1,"j":TOOLBOX.row+1};
+	gameCanvas.width = totalCellColNum * CELLSIZE;
+	gameCanvas.height = totalCellRowNum * CELLSIZE;
 
-gameCanvas.width = totalCellColNum * CELLSIZE;
-gameCanvas.height = totalCellRowNum * CELLSIZE;
+	borderWidth = CELLSIZE/40;
+};
+setSize();
 
-var borderWidth = CELLSIZE/40;
 
 
 //create cells 2d array for rays and tools (include toolbox)
@@ -86,6 +97,12 @@ function orientationToDxdy(orientation){
 <script src="drawing.js"></script>
 
 <script>
+//resize the whole board when change
+window.addEventListener('resize', e=>{
+	setSize(e);
+	refreshBoard();
+});
+
 //initialize the level data
     
 var uptoLevel= 1;
